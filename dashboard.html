@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Candidate Dashboard</title>
+  <link rel='stylesheet' type='text/css' href='css/styles.css' />
+</head>
+<body>
+  <div id='root'></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+  <script src='./candidates.js' type='text/javascript'></script>
+
+  <script type="text/babel">
+    const UP_KEY = 38;
+    const DOWN_KEY = 40;
+    const LEFT_KEY = 37;
+    const RIGHT_KEY = 39;
+
+    class CandidateList extends React.Component {
+      constructor (props) {
+        super(props);
+        this.state = { modal_active: false, modal_index: -1 };
+      }
+
+      showModal (i) {
+        this.setState({modal_active: true, modal_index: i});
+      }
+
+      hideModal () {
+        this.setState({modal_active: false});
+      }
+
+      modalPrev () {
+        this.setState({
+          modal_index:
+            (this.state.modal_index === 0) 
+            ? candidates.length - 1
+            : this.state.modal_index - 1
+        });
+      }
+
+      modalNext () {
+        this.setState({
+          modal_index:
+            (this.state.modal_index === candidates.length - 1)
+            ? 0
+            : this.state.modal_index + 1
+        });
+      }
+
+      handleKeyDown (e) {
+        switch (e.keyCode) {
+          case UP_KEY:
+          case LEFT_KEY:
+            this.modalPrev();
+            break;
+          case DOWN_KEY:
+          case RIGHT_KEY:
+            this.modalNext();
+            break;
+          default:
+            break;
+        }
+      }
+
+      componentDidMount () {
+        document.addEventListener('keydown', this.handleKeyDown.bind(this));
+      }
+      compomentWillUnmount () {
+        document.removeEventListener('keydown', this.handleKeyDown.bind(this));
+      }
+
+      render () {
+        var candidate_entry = function (candidate_data, index) {
+          return (
+            <div className='candidate' key={index}
+              onClick={() => this.showModal(index)}>
+              <span className='candidate-field candidate-name'>{candidate_data.name}</span>
+              <span className='candidate-field candidate-status'>{candidate_data.status}</span>
+              <span className='candidate-field candidate-app-date'>{candidate_data.applicationDate}</span>
+              <span className='candidate-field candidate-location'>{candidate_data.location}</span>
+            </div>
+          );
+        }.bind(this);
+
+        return (
+          <div>
+            <div className='candidates-header'>
+              <span className='candidate-field candidate-name'>Name</span>
+              <span className='candidate-field candidate-status'>Status</span>
+              <span className='candidate-field candidate-app-date'>Application Date</span>
+              <span className='candidate-field candidate-location'>Location</span>
+            </div>
+            {Array.from(candidates, candidate_entry)}
+
+            { this.state.modal_active
+              ? (<CandidateModal
+                    index={this.state.modal_index} 
+                    bg_click={() => this.hideModal()}
+                    nav_left={() => this.modalPrev()}
+                    nav_right={() => this.modalNext()}/>)
+              : this.state.modal_index }
+          </div>
+        )
+      }
+    }
+
+    class CandidateModal extends React.Component {
+      render() {
+        var candidate_data = candidates[this.props.index];
+        return (
+          <div>
+            <div className='modal-bg' onClick={this.props.bg_click}></div>
+            <div className='modal'>
+              <span className='modal-nav modal-left' onClick={this.props.nav_left}></span>
+              <span className='modal-contents'>
+                <h3>{candidate_data.name}</h3>
+                <p>Status: {candidate_data.status}</p>
+                <p>Application Date: {candidate_data.applicationDate}</p>
+                <p>Location: {candidate_data.location}</p>
+                <p>ID: {candidate_data.id}</p>
+              </span>
+              <span className='modal-nav modal-right' onClick={this.props.nav_right}></span>
+            </div>
+          </div>
+        )
+      }
+    }
+
+    ReactDOM.render(<CandidateList />, document.querySelector('#root'));
+  </script>
+</body>
+</html>
+
